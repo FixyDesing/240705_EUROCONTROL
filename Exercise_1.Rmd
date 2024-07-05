@@ -1,0 +1,100 @@
+---
+title: "Exercise 1"
+author: "Robbe Van Molle"
+date: "2024-06-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readxl)
+library(ggplot2)
+
+
+dataser <- read_excel("DATA/aiu-recruitement-exercise1.xlsx")
+
+head(dataser)
+```
+```{r}
+# Stap 1: Nieuwe kolom toevoegen met de som van vracht- en passagiersvluchten
+dataser$Average_daily_flights <- dataser$`Average daily cargo flights` + dataser$`Average daily passenger flights`
+
+# Stap 2: Bereken de procentuele verandering ten opzichte van de startdag
+# Eerst vinden we de waarde van de eerste dag
+start_value <- dataser$Average_daily_flights[1]
+
+# Dan berekenen we de procentuele verandering voor elke rij in de dataframe
+dataser$Percent_Change_from_Start_Day <- (dataser$Average_daily_flights - start_value) / start_value * 100
+
+# Stap 3: Bekijk de geüpdatete data
+head(dataser)
+```
+
+
+```{r}
+# Verander eventueel datatypes indien nodig
+dataser$Month <- as.Date(dataser$Month)
+
+dataser$Average_daily_flights <- dataser$`Average daily cargo flights` + dataser$`Average daily passenger flights`
+
+
+# Bereken basiswaarden (aanname: data is gesorteerd op datum)
+basis_cargo_flights <- dataser$`Average daily cargo flights`[1]
+basis_passenger_flights <- dataser$`Average daily passenger flights`[1]
+basis_flight_distance <- dataser$`Average flight distance (NM)`[1]
+basis_Average_daily_flights <- dataser$`Average_daily_flights`[1]
+
+# Bereken de procentuele verandering
+dataser$Cargo_Flights_Percent_Change <- (dataser$`Average daily cargo flights` - basis_cargo_flights) / basis_cargo_flights * 100
+dataser$Passenger_Flights_Percent_Change <- (dataser$`Average daily passenger flights` - basis_passenger_flights) / basis_passenger_flights * 100
+dataser$Flight_Distance_Percent_Change <- (dataser$`Average flight distance (NM)` - basis_flight_distance) / basis_flight_distance * 100
+dataser$Percent_Change_from_Start_Day <- (dataser$Average_daily_flights - basis_Average_daily_flights) / start_value * 100
+
+
+
+# Bekijk de resultaten
+head(dataser) 
+
+```
+
+
+```{r}
+p1 <- ggplot(dataser, aes(x = Month)) +
+  geom_line(aes(y = `Average daily cargo flights`, colour = "Cargo Flights")) +
+  geom_line(aes(y = `Average daily passenger flights`, colour = "Passenger Flights")) +
+  geom_line(aes(y = `Average flight distance (NM)`, colour = "Flight Distance")) +
+  geom_line(aes(y = `Average_daily_flights`, colour = "Daily Flights")) +
+  labs(title = "Original Data over Time", x = "Month", y = "Value") +
+  scale_colour_manual(values = c("Cargo Flights" = "blue", "Passenger Flights" = "red", "Flight Distance" = "green", "Daily Flights" = "orange"),
+                      name = "Legend") +
+  theme_minimal()
+
+print(p1)
+```
+
+
+```{r}
+p2 <- ggplot(dataser, aes(x = Month)) +
+  geom_line(aes(y = Cargo_Flights_Percent_Change, colour = "Cargo Flights % Change")) +
+  geom_line(aes(y = Passenger_Flights_Percent_Change, colour = "Passenger Flights % Change")) +
+  geom_line(aes(y = Flight_Distance_Percent_Change, colour = "Flight Distance % Change")) +
+  geom_line(aes(y = Percent_Change_from_Start_Day, colour = "Daily Flights % Change")) +
+  labs(title = "Percentage Change from Start Day", x = "Month", y = "Percentage Change (%)") +
+  scale_colour_manual(values = c("Cargo Flights % Change" = "blue", "Passenger Flights % Change" = "red", "Flight Distance % Change" = "green", "Daily Flights % Change" = "orange"),
+                      name = "Legend") +
+  theme_minimal()
+
+print(p2)
+
+# Specificeer het pad en de bestandsnaam voor het CSV-bestand
+output_file_path  <- "DATA/Exercise_1.csv"
+
+# Exporteer het dataframe naar een CSV-bestand
+write.csv(dataser, file = output_file_path , row.names = FALSE)
+
+
+```
+
